@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>eCommerce Shopping Cart</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #333;
+      color: #fff;
+      border-radius: 8px;
+    }
+
+    #search {
+      padding: 5px 10px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    #products {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .product {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      width: 220px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .product:hover {
+      transform: scale(1.03);
+    }
+
+    .product img {
+      max-width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 5px;
+    }
+
+    .product h3 {
+      margin: 10px 0 5px;
+    }
+
+    .product p {
+      margin: 5px 0;
+    }
+
+    .product button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .product button:hover {
+      background-color: #0056b3;
+    }
+
+    #cart-icon {
+      cursor: pointer;
+    }
+
+    #cart {
+      background: #fff;
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+
+    .cart-item button {
+      background-color: red;
+      color: white;
+      border: none;
+      padding: 5px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .total {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .clear-cart {
+      margin-top: 10px;
+      background-color: #ff9800;
+      color: #fff;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .product {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>EazyyBuy</h1>
+    <input type="text" id="search" placeholder="Search products..." />
+    <div id="cart-icon">🛒 (<span id="cart-count">0</span>)</div>
+  </header>
+
+  <main>
+    <div id="products"></div>
+    <div id="cart" class="hidden"></div>
+  </main>
+
+  <script>
+    const products = [
+      {
+        id: 1,
+        name: 'Smartphone',
+        price: 39999.00,
+        image: 'https://images-cdn.ubuy.co.in/633ff586ad6098462368226c-unlocked-android-smartphone-6-26in-hd.jpg',
+        description: 'Affordable smartphone with great features.',
+        category: 'electronics'
+      },
+      {
+        id: 2,
+        name: 'Headphones',
+        price: 1499.00,
+        image: 'https://store.storeimages.cdn-apple.com/4668/as-images.apple.com/is/MQTR3?wid=1144&hei=1144&fmt=jpeg&qlt=90&.v=1741643688482',
+        description: 'High-quality over-ear headphones.',
+        category: 'audio'
+      },
+
+      {
+        id: 3,
+        name: 'Smartwatch',
+        price: 4499.00,
+        image: 'https://cdn.mos.cms.futurecdn.net/qDiWC728ZbsZJuP34meocG.jpg',
+        description: 'Good quality smartwatch with automated features.',
+        category: 'electronics'
+
+      }
+    ];
+
+    const productsDiv = document.getElementById('products');
+    const cartDiv = document.getElementById('cart');
+    const cartIcon = document.getElementById('cart-icon');
+    const cartCount = document.getElementById('cart-count');
+    const searchInput = document.getElementById('search');
+
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+    function renderProducts(list = products) {
+      productsDiv.innerHTML = '';
+      list.forEach(product => {
+        const div = document.createElement('div');
+        div.className = 'product';
+        div.innerHTML = `
+          <img src="${product.image}" />
+          <h3>${product.name}</h3>
+          <p>${product.description}</p>
+          <p><strong>₹${product.price.toFixed(2)}</strong></p>
+          <button onclick="addToCart(${product.id})">Add to Cart</button>`;
+        productsDiv.appendChild(div);
+      });
+    }
+
+    window.addToCart = function(id) {
+      const item = cart.find(p => p.id === id);
+      if (item) item.qty++;
+      else cart.push({ ...products.find(p => p.id === id), qty: 1 });
+      saveCart();
+      updateCartDisplay();
+      alert("Item added to cart!");
+    };
+
+    function saveCart() {
+      localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function updateCartDisplay() {
+      cartCount.textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+    }
+
+    cartIcon.addEventListener('click', () => {
+      cartDiv.classList.toggle('hidden');
+      renderCart();
+    });
+
+    function renderCart() {
+      cartDiv.innerHTML = '<h2>Your Cart</h2>';
+      if (cart.length === 0) {
+        cartDiv.innerHTML += '<p>Cart is empty.</p>';
+        return;
+      }
+
+      let total = 0;
+      cart.forEach(item => {
+        total += item.qty * item.price;
+        cartDiv.innerHTML += `
+          <div class="cart-item">
+            <span>${item.name} x ${item.qty} - ₹${(item.qty * item.price).toFixed(2)}</span>
+            <button onclick="removeItem(${item.id})">Remove</button>
+          </div>`;
+      });
+
+      cartDiv.innerHTML += `
+        <div class="total">Total: ₹${total.toFixed(2)}</div>
+        <button class="clear-cart" onclick="clearCart()">Clear Cart</button>`;
+    }
+
+    window.removeItem = function(id) {
+      cart = cart.filter(item => item.id !== id);
+      saveCart();
+      updateCartDisplay();
+      renderCart();
+    };
+
+    window.clearCart = function() {
+      if (confirm("Are you sure you want to clear the cart?")) {
+        cart = [];
+        saveCart();
+        updateCartDisplay();
+        renderCart();
+      }
+    };
+
+    searchInput.addEventListener('input', (e) => {
+      const value = e.target.value.toLowerCase();
+      const filtered = products.filter(p =>
+        p.name.toLowerCase().includes(value) ||
+        p.description.toLowerCase().includes(value)
+      );
+      renderProducts(filtered);
+    });
+
+    renderProducts();
+    updateCartDisplay();
+  </script>
+</body>
+</html>
